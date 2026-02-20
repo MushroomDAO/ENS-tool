@@ -3,155 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <title>分配 forest.mushroom.box</title>
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"
-        integrity="sha384-POWgdAoUVoSKkKYCBiE8vhaiaawRSqMLmzJK50pZmRICRfkn2pYEHFRmn7Bogvej"
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer"
-    ></script>
     <style>
-        body { font-family: monospace; padding: 40px; max-width: 600px; }
+        body { font-family: monospace; padding: 40px; max-width: 760px; }
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-top: 10px; }
-        input { padding: 10px; font-size: 16px; width: 100%; margin-top: 10px; margin-bottom: 20px;}
+        input { padding: 10px; font-size: 16px; width: 100%; margin-top: 10px; margin-bottom: 10px;}
+        textarea { padding: 10px; font-size: 14px; width: 100%; margin-top: 10px; margin-bottom: 10px; font-family: monospace; }
         #log { margin-top: 20px; padding: 10px; background: #f4f4f4; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word;}
+        .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .row > * { flex: 1 1 auto; }
+        .card { border: 1px solid #e6e6e6; border-radius: 8px; padding: 16px; margin-top: 16px; }
+        .muted { color: #666; font-size: 13px; line-height: 1.4; }
+        .title { margin: 0; }
     </style>
 </head>
 <body>
 
-    <h2>🍄 蘑菇森林 - 子域名分配器</h2>
-    <p>当前操作：将 <b>forest.mushroom.box</b> 分配给指定的 Controller 地址。</p>
+    <h2 class="title">🍄 蘑菇森林 - .box 域名分配器（3DNS / Optimism）</h2>
+    <p class="muted">
+        `.box` 域名属于 3DNS 的 OP 域名 NFT 体系。写操作在 Optimism 主网完成（chainId=10）。
+    </p>
 
-    <label>请输入目标 Controller 地址 (EOA):</label>
-    <input type="text" id="targetAddress" placeholder="0x..." />
+    <div class="card">
+        <div class="row">
+            <button id="connectBtn">1. 连接 MetaMask（切到 OP）</button>
+            <button id="checkBoxBtn">2. 检查 3DNS 合约</button>
+        </div>
+        <div class="muted" id="statusLine">未连接</div>
+    </div>
 
-    <button id="actionBtn" onclick="execute()">1. 连接 MetaMask 并执行</button>
+    <div class="card">
+        <label>输入 `.box` 域名（3DNS tokenId 使用 namehash）：</label>
+        <input type="text" id="ensNameToCheck" placeholder="forest.mushroom.box" />
+        <button id="checkEnsBtn">检查 tokenId / owner</button>
+    </div>
+
+    <div class="card">
+        <label>域名（将把域名 NFT 转给目标地址）：</label>
+        <input type="text" id="parentDomain" value="forest.mushroom.box" />
+
+        <label>目标地址（EOA / 合约）：</label>
+        <input type="text" id="targetAddress" placeholder="0x..." />
+
+        <div class="row">
+            <button id="precheckBtn">3. 预检 owner</button>
+            <button id="setBtn">4. 执行 transfer</button>
+        </div>
+    </div>
 
     <div id="log">等待操作...</div>
-
-    <script>
-        const logEl = document.getElementById('log');
-        function resetLog() {
-            logEl.textContent = "";
-        }
-
-        function logText(msg) {
-            console.log(msg);
-            const line = document.createElement('div');
-            line.textContent = msg;
-            logEl.appendChild(line);
-        }
-
-        function logLink(label, url) {
-            console.log(label, url);
-            const line = document.createElement('div');
-            const a = document.createElement('a');
-            a.href = url;
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
-            a.textContent = label;
-            line.appendChild(a);
-            logEl.appendChild(line);
-        }
-
-        async function execute() {
-            resetLog();
-
-            const rawTargetAddress = document.getElementById('targetAddress').value.trim();
-            if (!rawTargetAddress || !ethers.isAddress(rawTargetAddress)) {
-                alert("请输入合法的以太坊地址！");
-                return;
-            }
-            const targetAddress = ethers.getAddress(rawTargetAddress);
-
-            // 1. 检查是否安装了 MetaMask
-            if (typeof window.ethereum === 'undefined') {
-                logText("❌ 未检测到 MetaMask，请安装插件。");
-                return;
-            }
-
-            const actionBtn = document.getElementById('actionBtn');
-            actionBtn.disabled = true;
-
-            try {
-                // 2. 初始化 Ethers Provider (通过 MetaMask)
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                
-                // 请求用户连接钱包
-                logText("正在请求连接 MetaMask...");
-                await provider.send("eth_requestAccounts", []);
-                const signer = await provider.getSigner();
-                const signerAddress = await signer.getAddress();
-                logText("✅ 钱包已连接: " + signerAddress);
-
-                // 3. 检查并切换到以太坊主网 (Chain ID: 1)
-                let network = await provider.getNetwork();
-                if (network.chainId !== 1n) {
-                    logText("⚠️ 当前不在以太坊主网，请求切换网络...");
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: '0x1' }],
-                        });
-                        network = await provider.getNetwork();
-                        if (network.chainId !== 1n) {
-                            logText("❌ 未能切换到以太坊主网，请在 MetaMask 中确认网络。");
-                            return;
-                        }
-                        logText("✅ 已切换到以太坊主网。");
-                    } catch (switchError) {
-                        logText("❌ 切换网络失败，请手动在 MetaMask 中切换到以太坊主网。");
-                        return;
-                    }
-                }
-
-                // 4. 设置合约信息
-                const ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
-                const ENS_REGISTRY_ABI = [
-                    "function owner(bytes32 node) external view returns(address)",
-                    "function isApprovedForAll(address owner, address operator) external view returns(bool)",
-                    "function setSubnodeOwner(bytes32 node, bytes32 label, address owner) external returns(bytes32)"
-                ];
-                // 注意：这里传入的是 signer，而不是 provider，这样才能发起写操作
-                const registry = new ethers.Contract(ENS_REGISTRY_ADDRESS, ENS_REGISTRY_ABI, signer);
-
-                // 5. 计算哈希值
-                const parentNode = ethers.namehash("mushroom.box");
-                const childLabel = ethers.id("forest"); // 对 "forest" 进行 keccak256
-                
-                const parentOwner = await registry.owner(parentNode);
-                const isOperator = await registry.isApprovedForAll(parentOwner, signerAddress);
-                if (parentOwner.toLowerCase() !== signerAddress.toLowerCase() && !isOperator) {
-                    logText("❌ 当前连接的钱包无权修改 mushroom.box 的子域名。");
-                    logText("需要满足其一：");
-                    logText(" - 连接钱包是 mushroom.box 的 owner");
-                    logText(" - mushroom.box 的 owner 已对该钱包设置 ApprovalForAll");
-                    logText("当前查询到的 owner: " + parentOwner);
-                    return;
-                }
-
-                logText("⏳ 正在唤起 MetaMask 发起交易...");
-                logText("参数:");
-                logText(" - Parent: mushroom.box");
-                logText(" - Label: forest");
-                logText(" - New Owner: " + targetAddress);
-
-                // 6. 发起交易
-                const tx = await registry.setSubnodeOwner(parentNode, childLabel, targetAddress);
-                logText("🚀 交易已提交! Hash:");
-                logLink(tx.hash, `https://etherscan.io/tx/${tx.hash}`);
-                logText("⏳ 等待区块链确认...");
-
-                // 7. 等待出块
-                await tx.wait();
-                logText("🎉 成功！forest.mushroom.box 的所有权已转移给目标地址！");
-
-            } catch (error) {
-                logText("❌ 发生错误:");
-                logText(error?.message || String(error));
-            } finally {
-                actionBtn.disabled = false;
-            }
-        }
-    </script>
+    <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
