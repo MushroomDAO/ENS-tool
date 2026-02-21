@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>.box 管理（3DNS / Optimism）</title>
+    <style>
+        body { font-family: monospace; padding: 40px; max-width: 760px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        input { padding: 10px; font-size: 16px; width: 100%; margin-top: 10px; margin-bottom: 10px;}
+        textarea { padding: 10px; font-size: 14px; width: 100%; margin-top: 10px; margin-bottom: 10px; font-family: monospace; }
+        #log { margin-top: 20px; padding: 10px; background: #f4f4f4; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word;}
+        .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .row > * { flex: 1 1 auto; }
+        .card { border: 1px solid #e6e6e6; border-radius: 8px; padding: 16px; margin-top: 16px; }
+        .muted { color: #666; font-size: 13px; line-height: 1.4; }
+        .title { margin: 0; }
+        a { color: #0b79d0; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <a href="/index.html">← 返回选择</a>
+    <h2 class="title">🍄 蘑菇森林 - .box 子域名分配器（3DNS / Optimism）</h2>
+    <p class="muted">
+        `.box` 域名属于 3DNS 的 OP 域名 NFT 体系。写操作在 Optimism 主网完成（chainId=10）。
+        若合约拒绝 setSubnodeOwner（revert），说明该子域名需要先走 3DNS 的注册/铸造流程。
+    </p>
+
+    <div class="card">
+        <div class="row">
+            <button id="connectBtn">1. 连接 MetaMask（切到 OP）</button>
+            <button id="checkBoxBtn">2. 检查 3DNS 合约</button>
+        </div>
+        <div class="muted" id="statusLine">未连接</div>
+    </div>
+
+    <div class="card">
+        <label>输入 `.box` 域名（用于查询 owner/resolver）：</label>
+        <input type="text" id="ensNameToCheck" placeholder="forest.mushroom.box" />
+        <button id="checkEnsBtn">检查 owner / resolver</button>
+    </div>
+
+    <div class="card">
+        <label>Parent 域名（有权限的 parent，比如 mushroom.box）：</label>
+        <input type="text" id="parentDomain" value="mushroom.box" />
+
+        <label>子标签 label（比如 forest）：</label>
+        <input type="text" id="subLabel" value="forest" />
+
+        <label>目标地址（EOA / 合约）：</label>
+        <input type="text" id="targetAddress" placeholder="0x..." />
+
+        <div class="row">
+            <button id="precheckBtn">3. 预检权限</button>
+            <button id="setBtn">4. 分配子域名（若失败则需注册）</button>
+        </div>
+    </div>
+
+    <div id="log">等待操作...</div>
+    <script type="module" src="/src/main.ts"></script>
+ </body>
+</html>
+
