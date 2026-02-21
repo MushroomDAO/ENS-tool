@@ -16,7 +16,7 @@
   <h2>.eth 管理（MVP：L2Records → Gateway(viem) → L1 OffchainResolver）</h2>
   <div class="card">
     <div class="row">
-      <input id="nodeHex" placeholder="bytes32 node (0x...)" style="flex: 1 1 auto;" />
+      <input id="nodeHex" placeholder="node：支持 name (asset.eth) 或 bytes32(0x...)" style="flex: 1 1 auto;" />
       <button id="queryAddrBtn">查询 addr</button>
       <button id="queryTextBtn">查询 text('com.twitter')</button>
       <button id="queryChBtn">查询 contenthash</button>
@@ -26,7 +26,7 @@
   <div class="card">
     <div style="margin-bottom:8px;">签名 SetAddr（EIP‑712 草案，仅生成 payload 与签名，后续发往网关）</div>
     <div class="row">
-      <input id="sigNodeHex" placeholder="bytes32 node (0x...)" />
+      <input id="sigNodeHex" placeholder="node：支持 name 或 bytes32" />
       <input id="sigCoinType" placeholder="coinType (e.g. 60)" />
       <input id="sigAddr" placeholder="addr bytes (0x…，可为 address 或多链 bytes)" />
     </div>

@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, custom, http, type Address } from 'viem'
+import { createPublicClient, createWalletClient, custom, http, isHex, namehash, type Address } from 'viem'
 import { optimismSepolia } from 'viem/chains'
 
 const L2_RECORDS_ABI = [
@@ -30,56 +30,81 @@ const L2_RECORDS_ABI = [
 
 const client = createPublicClient({
   chain: optimismSepolia,
-  transport: http(import.meta.env?.VITE_L2_RPC_URL || ''),
+  transport: http(import.meta.env?.OP_SEPOLIA_RPC_URL || import.meta.env?.VITE_L2_RPC_URL || ''),
 })
 
-const CONTRACT = (import.meta.env?.VITE_L2_RECORDS_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`
+const CONTRACT = (
+  import.meta.env?.L2_RECORDS_ADDRESS ||
+  import.meta.env?.VITE_L2_RECORDS_ADDRESS ||
+  '0x0000000000000000000000000000000000000000'
+) as `0x${string}`
 const VERIFYING = (import.meta.env?.VITE_EIP712_VERIFYING_CONTRACT || CONTRACT) as `0x${string}`
 
 function byId<T extends HTMLElement = HTMLElement>(id: string) {
   return document.getElementById(id) as T | null
 }
 
+function toNode(value: string): `0x${string}` {
+  const v = value.trim()
+  if (isHex(v) && v.length === 66) return v as `0x${string}`
+  return namehash(v)
+}
+
+function setResult(text: string) {
+  const resultEl = byId<HTMLDivElement>('result')
+  if (!resultEl) return
+  resultEl.textContent = text
+}
+
 async function queryAddr() {
   const nodeInput = byId<HTMLInputElement>('nodeHex')
-  const resultEl = byId<HTMLDivElement>('result')
-  if (!nodeInput || !resultEl) return
-  const node = nodeInput.value.trim() as `0x${string}`
-  const value = await client.readContract({
-    address: CONTRACT,
-    abi: L2_RECORDS_ABI,
-    functionName: 'addr',
-    args: [node],
-  })
-  resultEl.textContent = `addr: ${value}`
+  if (!nodeInput) return
+  try {
+    const node = toNode(nodeInput.value)
+    const value = await client.readContract({
+      address: CONTRACT,
+      abi: L2_RECORDS_ABI,
+      functionName: 'addr',
+      args: [node],
+    })
+    setResult(`addr: ${value}`)
+  } catch (e) {
+    setResult(`error: ${(e as Error)?.message ?? String(e)}`)
+  }
 }
 
 async function queryText() {
   const nodeInput = byId<HTMLInputElement>('nodeHex')
-  const resultEl = byId<HTMLDivElement>('result')
-  if (!nodeInput || !resultEl) return
-  const node = nodeInput.value.trim() as `0x${string}`
-  const value = await client.readContract({
-    address: CONTRACT,
-    abi: L2_RECORDS_ABI,
-    functionName: 'text',
-    args: [node, 'com.twitter'],
-  })
-  resultEl.textContent = `text(com.twitter): ${value}`
+  if (!nodeInput) return
+  try {
+    const node = toNode(nodeInput.value)
+    const value = await client.readContract({
+      address: CONTRACT,
+      abi: L2_RECORDS_ABI,
+      functionName: 'text',
+      args: [node, 'com.twitter'],
+    })
+    setResult(`text(com.twitter): ${value}`)
+  } catch (e) {
+    setResult(`error: ${(e as Error)?.message ?? String(e)}`)
+  }
 }
 
 async function queryCh() {
   const nodeInput = byId<HTMLInputElement>('nodeHex')
-  const resultEl = byId<HTMLDivElement>('result')
-  if (!nodeInput || !resultEl) return
-  const node = nodeInput.value.trim() as `0x${string}`
-  const value = await client.readContract({
-    address: CONTRACT,
-    abi: L2_RECORDS_ABI,
-    functionName: 'contenthash',
-    args: [node],
-  })
-  resultEl.textContent = `contenthash: ${value}`
+  if (!nodeInput) return
+  try {
+    const node = toNode(nodeInput.value)
+    const value = await client.readContract({
+      address: CONTRACT,
+      abi: L2_RECORDS_ABI,
+      functionName: 'contenthash',
+      args: [node],
+    })
+    setResult(`contenthash: ${value}`)
+  } catch (e) {
+    setResult(`error: ${(e as Error)?.message ?? String(e)}`)
+  }
 }
 
 const qa = byId<HTMLButtonElement>('queryAddrBtn')
@@ -114,7 +139,7 @@ async function signSetAddr() {
   const outEl = byId<HTMLPreElement>('sigOutput')
   if (!nodeEl || !coinEl || !addrEl || !outEl) return
 
-  const node = nodeEl.value.trim() as `0x${string}`
+  const node = toNode(nodeEl.value)
   const coinType = BigInt(coinEl.value.trim() || '60')
   const addr = addrEl.value.trim() as `0x${string}`
   const now = Math.floor(Date.now() / 1000)

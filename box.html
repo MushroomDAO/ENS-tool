@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>.box 管理（3DNS / Optimism）</title>
+    <title>.box 管理（my.box / Optimism）</title>
     <style>
         body { font-family: monospace; padding: 40px; max-width: 760px; }
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-top: 10px; }
@@ -19,16 +19,16 @@
 </head>
 <body>
     <a href="/index.html">← 返回选择</a>
-    <h2 class="title">🍄 蘑菇森林 - .box 子域名分配器（3DNS / Optimism）</h2>
+    <h2 class="title">🍄 蘑菇森林 - .box 子域名分配器（my.box / Optimism）</h2>
     <p class="muted">
-        `.box` 域名属于 3DNS 的 OP 域名 NFT 体系。写操作在 Optimism 主网完成（chainId=10）。
-        若合约拒绝 setSubnodeOwner（revert），说明该子域名需要先走 3DNS 的注册/铸造流程。
+        `.box` 域名属于 OP 上的 .box 域名 NFT 体系。写操作在 Optimism 主网完成（chainId=10）。
+        若合约拒绝 setSubnodeOwner（revert），说明该子域名需要先走 my.box 的注册/铸造流程。
     </p>
 
     <div class="card">
         <div class="row">
             <button id="connectBtn">1. 连接 MetaMask（切到 OP）</button>
-            <button id="checkBoxBtn">2. 检查 3DNS 合约</button>
+            <button id="checkBoxBtn">2. 检查 my.box 合约</button>
         </div>
         <div class="muted" id="statusLine">未连接</div>
     </div>
@@ -59,4 +59,3 @@
     <script type="module" src="/src/main.ts"></script>
  </body>
 </html>
-

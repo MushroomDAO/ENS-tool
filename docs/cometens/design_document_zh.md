@@ -56,7 +56,7 @@ CometENS 旨在成为一个开源、去中心化的 ENS 子域名分发和管理
   - 安全与观测：EIP‑712、RBAC、限流、审计、日志
 
 .box（OP）：
-- 3DNS/my.box 合约状态只读展示；待官方开放写入能力后接入
+- my.box 合约状态只读展示；待官方开放写入能力后接入
 
 ```mermaid
 graph TD

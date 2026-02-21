@@ -186,7 +186,7 @@ async function checkBoxRegistration() {
     }),
   ])
 
-  logText('3DNS 合约（Optimism）:')
+  logText('my.box 合约（Optimism）:')
   logText(`address: ${THREEDNS_CONTRACT_ADDRESS}`)
   logText(`name: ${name}`)
   logText(`symbol: ${symbol}`)
@@ -264,7 +264,7 @@ async function checkEnsResolution() {
   if (tokenOwner) logText(`ownerOf(tokenId): ${tokenOwner}`)
 
   logLink(
-    '3DNS 合约（Optimism Etherscan）',
+    'my.box 合约（Optimism Etherscan）',
     `https://optimistic.etherscan.io/address/${THREEDNS_CONTRACT_ADDRESS}`,
   )
   logLink('OP 地址（owner）', `https://optimistic.etherscan.io/address/${owner}`)
@@ -389,12 +389,12 @@ async function precheckPermission() {
       account: conn.account,
     })
   } catch {
-    logText('预检未通过：3DNS 合约拒绝 setSubnodeOwner（eth_call 也会 revert）')
+    logText('预检未通过：合约拒绝 setSubnodeOwner（eth_call 也会 revert）')
     logText('这通常表示该体系不允许通过 setSubnodeOwner 免费“创建/分配”子域名')
     logText('如果 childOwner=0x0，想把 forest.mushroom.box 给某个地址：')
-    logText(' - 需要先走 3DNS 的注册/铸造流程（或在注册时直接指定 owner=目标地址）')
+    logText(' - 需要先走 my.box 的注册/铸造流程（或在注册时直接指定 owner=目标地址）')
     logText(' - 注册后再进行 transferFrom/safeTransferFrom 转入目标地址')
-    logLink('3DNS 官网', 'https://3dns.box/')
+    logLink('my.box', 'https://my.box/')
     return
   }
 
@@ -462,8 +462,8 @@ async function setSubnodeOwner() {
         account: conn.account,
       })
     } catch {
-      logText('交易已中止：合约会 revert（请改用 3DNS 的注册/铸造流程）')
-      logLink('3DNS 官网', 'https://3dns.box/')
+      logText('交易已中止：合约会 revert（请改用 my.box 的注册/铸造流程）')
+      logLink('my.box', 'https://my.box/')
       return
     }
 

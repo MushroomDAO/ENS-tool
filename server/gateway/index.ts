@@ -1,13 +1,31 @@
-import { createPublicClient, http, decodeFunctionData, encodeFunctionResult } from 'viem'
+import { createPublicClient, http, decodeFunctionData, encodeFunctionResult, type Hex } from 'viem'
 import { optimismSepolia } from 'viem/chains'
+import { privateKeyToAccount } from 'viem/accounts'
 import { L2RecordsReader } from './readers/L2RecordsReader'
+
+const rpcUrl =
+  process.env.OP_SEPOLIA_RPC_URL ||
+  process.env.L2_RPC_URL ||
+  process.env.VITE_L2_RPC_URL ||
+  ''
 
 const client = createPublicClient({
   chain: optimismSepolia,
-  transport: http(process.env.L2_RPC_URL),
+  transport: http(rpcUrl),
 })
 
-const reader = new L2RecordsReader(client, (process.env.L2_RECORDS_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`)
+const l2RecordsAddress =
+  (process.env.L2_RECORDS_ADDRESS ||
+    process.env.VITE_L2_RECORDS_ADDRESS ||
+    '0x0000000000000000000000000000000000000000') as `0x${string}`
+
+const reader = new L2RecordsReader(client, l2RecordsAddress)
+
+const signer = (() => {
+  const pk = process.env.PRIVATE_KEY_SUPPLIER as Hex | undefined
+  if (!pk) return null
+  return privateKeyToAccount(pk)
+})()
 
 export async function handleResolve(calldata: `0x${string}`): Promise<`0x${string}`> {
   const { functionName, args } = decodeFunctionData({
@@ -100,3 +118,8 @@ export async function handleResolve(calldata: `0x${string}`): Promise<`0x${strin
   throw new Error('Unsupported selector')
 }
 
+export async function handleResolveSigned(calldata: `0x${string}`): Promise<{ data: `0x${string}`; signature?: `0x${string}` }> {
+  const data = await handleResolve(calldata)
+  const signature = signer ? await signer.signMessage({ message: { raw: data } }) : undefined
+  return { data, signature }
+}
