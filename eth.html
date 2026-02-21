@@ -23,6 +23,19 @@
     </div>
     <div id="result" style="margin-top:12px;"></div>
   </div>
+  <div class="card">
+    <div style="margin-bottom:8px;">签名 SetAddr（EIP‑712 草案，仅生成 payload 与签名，后续发往网关）</div>
+    <div class="row">
+      <input id="sigNodeHex" placeholder="bytes32 node (0x...)" />
+      <input id="sigCoinType" placeholder="coinType (e.g. 60)" />
+      <input id="sigAddr" placeholder="addr bytes (0x…，可为 address 或多链 bytes)" />
+    </div>
+    <div class="row">
+      <input id="sigDeadline" placeholder="deadline (unix seconds, 可留空=+10min)" />
+      <button id="signSetAddrBtn">签名 SetAddr</button>
+    </div>
+    <pre id="sigOutput" style="white-space:pre-wrap;"></pre>
+  </div>
   <script type="module" src="/src/eth.ts"></script>
 </body>
 </html>
