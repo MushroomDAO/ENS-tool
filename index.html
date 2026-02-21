@@ -18,9 +18,10 @@
 </head>
 <body>
 
-    <h2 class="title">🍄 蘑菇森林 - .box 域名分配器（3DNS / Optimism）</h2>
+    <h2 class="title">🍄 蘑菇森林 - .box 子域名分配器（3DNS / Optimism）</h2>
     <p class="muted">
         `.box` 域名属于 3DNS 的 OP 域名 NFT 体系。写操作在 Optimism 主网完成（chainId=10）。
+        若合约拒绝 setSubnodeOwner（revert），说明该子域名需要先走 3DNS 的注册/铸造流程。
     </p>
 
     <div class="card">
@@ -32,21 +33,24 @@
     </div>
 
     <div class="card">
-        <label>输入 `.box` 域名（3DNS tokenId 使用 namehash）：</label>
+        <label>输入 `.box` 域名（用于查询 owner/resolver）：</label>
         <input type="text" id="ensNameToCheck" placeholder="forest.mushroom.box" />
-        <button id="checkEnsBtn">检查 tokenId / owner</button>
+        <button id="checkEnsBtn">检查 owner / resolver</button>
     </div>
 
     <div class="card">
-        <label>域名（将把域名 NFT 转给目标地址）：</label>
-        <input type="text" id="parentDomain" value="forest.mushroom.box" />
+        <label>Parent 域名（有权限的 parent，比如 mushroom.box）：</label>
+        <input type="text" id="parentDomain" value="mushroom.box" />
+
+        <label>子标签 label（比如 forest）：</label>
+        <input type="text" id="subLabel" value="forest" />
 
         <label>目标地址（EOA / 合约）：</label>
         <input type="text" id="targetAddress" placeholder="0x..." />
 
         <div class="row">
-            <button id="precheckBtn">3. 预检 owner</button>
-            <button id="setBtn">4. 执行 transfer</button>
+            <button id="precheckBtn">3. 预检权限</button>
+            <button id="setBtn">4. 分配子域名（若失败则需注册）</button>
         </div>
     </div>
 
