@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, custom, http, isHex, namehash, type Address } from 'viem'
-import { optimismSepolia } from 'viem/chains'
+import { mainnet, optimismSepolia, sepolia } from 'viem/chains'
 
 const L2_RECORDS_ABI = [
   {
@@ -28,9 +28,19 @@ const L2_RECORDS_ABI = [
   },
 ] as const
 
-const client = createPublicClient({
+const l2Client = createPublicClient({
   chain: optimismSepolia,
   transport: http(import.meta.env?.OP_SEPOLIA_RPC_URL || import.meta.env?.VITE_L2_RPC_URL || ''),
+})
+
+const l1SepoliaClient = createPublicClient({
+  chain: sepolia,
+  transport: http(import.meta.env?.VITE_L1_SEPOLIA_RPC_URL || ''),
+})
+
+const l1MainnetClient = createPublicClient({
+  chain: mainnet,
+  transport: http(import.meta.env?.VITE_L1_MAINNET_RPC_URL || ''),
 })
 
 const CONTRACT = (
@@ -56,21 +66,51 @@ function setResult(text: string) {
   resultEl.textContent = text
 }
 
+function getQuerySource(): 'l1' | 'l2' {
+  const el = byId<HTMLSelectElement>('querySource')
+  return el?.value === 'l1' ? 'l1' : 'l2'
+}
+
+function getL1Client() {
+  const chainEl = byId<HTMLSelectElement>('l1Chain')
+  return chainEl?.value === 'mainnet' ? l1MainnetClient : l1SepoliaClient
+}
+
+const PUBLIC_RESOLVER_ABI = [
+  {
+    type: 'function',
+    name: 'contenthash',
+    stateMutability: 'view',
+    inputs: [{ name: 'node', type: 'bytes32' }],
+    outputs: [{ name: '', type: 'bytes' }],
+  },
+] as const
+
 async function queryAddr() {
   const nodeInput = byId<HTMLInputElement>('nodeHex')
   if (!nodeInput) return
   try {
+    const source = getQuerySource()
+    if (source === 'l1') {
+      const name = nodeInput.value.trim()
+      if (!name) throw new Error('请输入 ENS name，例如 asset3.eth')
+      const l1 = getL1Client()
+      const value = await l1.getEnsAddress({ name })
+      setResult(`L1 addr: ${value ?? '(null)'}`)
+      return
+    }
+
     if (CONTRACT === '0x0000000000000000000000000000000000000000') {
       throw new Error('未配置 L2Records 地址：请设置 OP_L2_RECORDS_ADDRESS 或 VITE_L2_RECORDS_ADDRESS')
     }
     const node = toNode(nodeInput.value)
-    const value = await client.readContract({
+    const value = await l2Client.readContract({
       address: CONTRACT,
       abi: L2_RECORDS_ABI,
       functionName: 'addr',
       args: [node],
     })
-    setResult(`addr: ${value}`)
+    setResult(`L2 addr: ${value}`)
   } catch (e) {
     setResult(`error: ${(e as Error)?.message ?? String(e)}`)
   }
@@ -80,17 +120,27 @@ async function queryText() {
   const nodeInput = byId<HTMLInputElement>('nodeHex')
   if (!nodeInput) return
   try {
+    const source = getQuerySource()
+    if (source === 'l1') {
+      const name = nodeInput.value.trim()
+      if (!name) throw new Error('请输入 ENS name，例如 asset3.eth')
+      const l1 = getL1Client()
+      const value = await l1.getEnsText({ name, key: 'com.twitter' })
+      setResult(`L1 text(com.twitter): ${value ?? '(null)'}`)
+      return
+    }
+
     if (CONTRACT === '0x0000000000000000000000000000000000000000') {
       throw new Error('未配置 L2Records 地址：请设置 OP_L2_RECORDS_ADDRESS 或 VITE_L2_RECORDS_ADDRESS')
     }
     const node = toNode(nodeInput.value)
-    const value = await client.readContract({
+    const value = await l2Client.readContract({
       address: CONTRACT,
       abi: L2_RECORDS_ABI,
       functionName: 'text',
       args: [node, 'com.twitter'],
     })
-    setResult(`text(com.twitter): ${value}`)
+    setResult(`L2 text(com.twitter): ${value}`)
   } catch (e) {
     setResult(`error: ${(e as Error)?.message ?? String(e)}`)
   }
@@ -100,17 +150,38 @@ async function queryCh() {
   const nodeInput = byId<HTMLInputElement>('nodeHex')
   if (!nodeInput) return
   try {
+    const source = getQuerySource()
+    if (source === 'l1') {
+      const name = nodeInput.value.trim()
+      if (!name) throw new Error('请输入 ENS name，例如 asset3.eth')
+      const l1 = getL1Client()
+      const resolver = await l1.getEnsResolver({ name })
+      if (!resolver) {
+        setResult('L1 contenthash: (no resolver)')
+        return
+      }
+      const node = namehash(name)
+      const value = await l1.readContract({
+        address: resolver,
+        abi: PUBLIC_RESOLVER_ABI,
+        functionName: 'contenthash',
+        args: [node],
+      })
+      setResult(`L1 contenthash: ${value}`)
+      return
+    }
+
     if (CONTRACT === '0x0000000000000000000000000000000000000000') {
       throw new Error('未配置 L2Records 地址：请设置 OP_L2_RECORDS_ADDRESS 或 VITE_L2_RECORDS_ADDRESS')
     }
     const node = toNode(nodeInput.value)
-    const value = await client.readContract({
+    const value = await l2Client.readContract({
       address: CONTRACT,
       abi: L2_RECORDS_ABI,
       functionName: 'contenthash',
       args: [node],
     })
-    setResult(`contenthash: ${value}`)
+    setResult(`L2 contenthash: ${value}`)
   } catch (e) {
     setResult(`error: ${(e as Error)?.message ?? String(e)}`)
   }
