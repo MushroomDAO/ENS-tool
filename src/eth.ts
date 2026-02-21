@@ -34,7 +34,7 @@ const client = createPublicClient({
 })
 
 const CONTRACT = (
-  import.meta.env?.L2_RECORDS_ADDRESS ||
+  import.meta.env?.OP_L2_RECORDS_ADDRESS ||
   import.meta.env?.VITE_L2_RECORDS_ADDRESS ||
   '0x0000000000000000000000000000000000000000'
 ) as `0x${string}`
@@ -60,6 +60,9 @@ async function queryAddr() {
   const nodeInput = byId<HTMLInputElement>('nodeHex')
   if (!nodeInput) return
   try {
+    if (CONTRACT === '0x0000000000000000000000000000000000000000') {
+      throw new Error('未配置 L2Records 地址：请设置 OP_L2_RECORDS_ADDRESS 或 VITE_L2_RECORDS_ADDRESS')
+    }
     const node = toNode(nodeInput.value)
     const value = await client.readContract({
       address: CONTRACT,
@@ -77,6 +80,9 @@ async function queryText() {
   const nodeInput = byId<HTMLInputElement>('nodeHex')
   if (!nodeInput) return
   try {
+    if (CONTRACT === '0x0000000000000000000000000000000000000000') {
+      throw new Error('未配置 L2Records 地址：请设置 OP_L2_RECORDS_ADDRESS 或 VITE_L2_RECORDS_ADDRESS')
+    }
     const node = toNode(nodeInput.value)
     const value = await client.readContract({
       address: CONTRACT,
@@ -94,6 +100,9 @@ async function queryCh() {
   const nodeInput = byId<HTMLInputElement>('nodeHex')
   if (!nodeInput) return
   try {
+    if (CONTRACT === '0x0000000000000000000000000000000000000000') {
+      throw new Error('未配置 L2Records 地址：请设置 OP_L2_RECORDS_ADDRESS 或 VITE_L2_RECORDS_ADDRESS')
+    }
     const node = toNode(nodeInput.value)
     const value = await client.readContract({
       address: CONTRACT,
